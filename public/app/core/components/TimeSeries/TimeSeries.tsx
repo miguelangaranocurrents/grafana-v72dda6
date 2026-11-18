@@ -41,7 +41,12 @@ export function TimeSeries(props: TimeSeriesProps) {
 
   const renderLegend = useCallback(
     (uPlotConfig: UPlotConfigBuilder) => {
-      if (!uPlotConfig || (legend && !legend.showLegend) || !hasVisibleLegendSeries(uPlotConfig, frames)) {
+      if (
+        !uPlotConfig ||
+        // `displayMode: 'hidden'` is the deprecated way of hiding the legend
+        (legend && (!legend.showLegend || String(legend.displayMode) === 'hidden')) ||
+        !hasVisibleLegendSeries(uPlotConfig, frames)
+      ) {
         return null;
       }
 

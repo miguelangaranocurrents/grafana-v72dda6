@@ -752,13 +752,20 @@ class EasyTzZone extends IANAZone {
   }
 }
 
+// moment-timezone ignores zone names it has no data for (e.g. "default"); mirror that instead of
+// producing invalid DateTimes.
+function isKnownZone(zone: string): boolean {
+  const name = normalizeZoneName(zone);
+  return name === 'UTC' || IANAZone.isValidZone(name);
+}
+
 function normalizeZone(zone: string | Zone): Zone {
   if (typeof zone !== 'string') {
     return zone;
   }
 
   const name = normalizeZoneName(zone);
-  if (name === 'UTC') {
+  if (name === 'UTC' || !IANAZone.isValidZone(name)) {
     return FixedOffsetZone.instance(0);
   }
 
@@ -1030,6 +1037,10 @@ class MomentCompat implements MomentLike {
   tz(zone?: string, keepLocalTime = false): string | undefined | MomentLike {
     if (zone == null) {
       return this._dt.zoneName ?? undefined;
+    }
+
+    if (!isKnownZone(zone)) {
+      return this;
     }
 
     return this._setDt(this._dt.setZone(normalizeZone(zone), { keepLocalTime }));
